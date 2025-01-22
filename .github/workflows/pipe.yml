@@ -42,7 +42,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-central-1
 
       # Step 7: Build the application with SAM
       - name: Build with SAM
@@ -59,7 +59,7 @@ jobs:
             --stack-name aws-resume-stack \
             --s3-bucket ${{ secrets.S3_FOR_SAM }} \
             --capabilities CAPABILITY_IAM \
-            --region us-east-1
+            --region eu-central-1
 
       # Step 9: Run tests after deployment (Optional)
       - name: Post-deployment tests
