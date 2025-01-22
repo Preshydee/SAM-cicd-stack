@@ -43,7 +43,8 @@ jobs:
       # Step 7: Build the application with SAM
       - name: Build with SAM
         uses: aws-actions/setup-sam@v1
-      - run: sam build HelloWorldFuction
+      - run: sam build --template aws-sam\build\template.yaml
+
 
       # Step 8: Deploy to the test environment
       - name: Deploy to Test Environment
