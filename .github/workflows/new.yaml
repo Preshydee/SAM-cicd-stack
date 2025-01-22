@@ -1,0 +1,68 @@
+name: Run build, tests, and deployment on push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python environment
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+     # # Step 3: Install dependencies
+      #- name: Install dependencies
+       # run: |
+        #  python -m pip install --upgrade pip
+         # pip install -r requirements.txt
+
+      # Step 4: Run code linting
+      - name: Run code linting
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+
+      # Step 6: Configure AWS credentials for SAM
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      # Step 7: Build the application with SAM
+      - name: Build with SAM
+        uses: aws-actions/setup-sam@v1
+      - run: sam build --use-container
+
+      # Step 8: Deploy to the test environment
+      - name: Deploy to Test Environment
+        run: |
+          sam deploy \
+            --debug \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --stack-name aws-resume-stack \
+            --s3-bucket ${{ secrets.S3_FOR_SAM }} \
+            --capabilities CAPABILITY_IAM \
+            --region eu-central-1
+
+      # Step 9: Run tests after deployment (Optional)
+      - name: Post-deployment tests
+        run: |
+          # Example: Test the Lambda function with AWS CLI
+          aws lambda invoke \
+            --function-name aws-resume-stack-function \
+            --payload '{}' \
+            response.json
+          cat response.json
