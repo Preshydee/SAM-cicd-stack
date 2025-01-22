@@ -12,7 +12,7 @@ on:
 env:
   PIPELINE_USER_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   PIPELINE_USER_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  SAM_TEMPLATE: /cicd-stack/ci-cd-sam-app/template.yaml 
+  SAM_TEMPLATE: ./template.yaml 
   TESTING_STACK_NAME: cicd-stack
   TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::381491927793:role/aws-sam-cli-managed-dev-pipel-PipelineExecutionRole-mM6EyM01mOJa
   TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::381491927793:role/aws-sam-cli-managed-dev-p-CloudFormationExecutionRo-uiBkpCJXlPVW
