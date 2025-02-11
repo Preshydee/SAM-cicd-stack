@@ -1,0 +1,80 @@
+name: CI/CD for Serverless App
+
+on:
+  push:
+    branches:
+      - main  # Runs on push to the main branch
+
+jobs:
+  lint:
+    name: Run Linting and Code Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint handler.js
+
+      - name: Validate AWS SAM Template
+        run: |
+          pip install aws-sam-cli
+          sam validate
+
+  deploy:
+    name: Deploy to Test Environment
+    runs-on: ubuntu-latest
+    needs: lint  # Runs only if linting passes
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install AWS SAM CLI
+        run: pip install aws-sam-cli
+
+      - name: Build and Package Lambda Function
+        run: |
+          sam build
+          sam package --output-template-file packaged.yaml --s3-bucket your-s3-bucket-name
+
+      - name: Deploy to Test Environment
+        run: |
+          sam deploy --template-file packaged.yaml \
+            --stack-name serverless-app-test \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset
+
+  test:
+    name: Run Automated Tests
+    runs-on: ubuntu-latest
+    needs: deploy  # Runs only if deployment succeeds
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Jest Tests
+        run: npm test  # Ensure you have Jest configured
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: test
+    if: failure()  # Runs if tests fail
+    steps:
+      - name: Rollback Deployment
+        run: |
+          aws cloudformation delete-stack --stack-name serverless-app-test
+          echo "Rollback initiated due to failed tests!"
